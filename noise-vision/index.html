@@ -15,6 +15,7 @@
 <div id="start" class="overlay">
   <h1>NOISE VISION</h1>
   <p>העולם נראה רק כשאתה זז.<br>עצור — והכל נעלם ברעש.<br>לחץ על המסך כדי לשלוח <b>PULSE</b>.</p>
+  <label class="startchk"><input id="ai0" type="checkbox" checked> עומק AI — ה-PULSE עובר בחדר לפי מרחק (הורדה חד-פעמית ~27–50MB)</label>
   <p class="warn">⚠️ אזהרת הבהובים: האתר מציג רעש מהבהב.</p>
   <button id="go">התחל</button>
   <p id="err" class="err" hidden></p>
@@ -43,9 +44,9 @@
     <label>צבע 1 <input id="colA" type="color" value="#000000"></label>
     <label>צבע 2 <input id="colB" type="color" value="#ffffff"></label>
   </div>
-  <label class="chk"><input id="ai" type="checkbox"> עומק AI ל-PULSE (מוריד מודל ~25MB)</label>
+  <label class="chk"><input id="ai" type="checkbox" checked> עומק AI (PULSE לפי מרחק + הפרדת עצמים לפי צורה)</label>
   <label class="chk"><input id="clap" type="checkbox"> מחיאת כף = PULSE (מיקרופון)</label>
-  <label class="chk"><input id="debug" type="checkbox"> מצב דיבאג (הצג מצלמה + תנועה)</label>
+  <label class="chk"><input id="debug" type="checkbox"> מצב דיבאג (מצלמה | עומק/תנועה + זמני מודל)</label>
   <button id="close">סגור</button>
 </div>
 
