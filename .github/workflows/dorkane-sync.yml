@@ -1,0 +1,25 @@
+name: dorkane – sync site from Google Drive
+on:
+  schedule:
+    - cron: '7,37 * * * *'   # every 30 minutes
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild data.js from Drive
+        working-directory: dorkane/tools
+        run: |
+          ROOT=$(cat ../drive-folder.txt | tr -d '[:space:]')
+          if [ -z "$ROOT" ]; then echo "No Drive folder set yet"; exit 0; fi
+          python3 sync_drive.py "$ROOT"
+      - name: Publish if anything changed
+        run: |
+          if git diff --quiet; then echo "No changes"; exit 0; fi
+          git config user.name "dorkane-sync"
+          git config user.email "actions@users.noreply.github.com"
+          git commit -am "dorkane: update works from Google Drive"
+          git push
