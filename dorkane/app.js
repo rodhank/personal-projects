@@ -28,7 +28,7 @@
       f.appendChild(fr);
       $('#playerHelp').hidden = false;
     };
-    const direct = it.src || (it.m && MEDIA + it.id + '.mp4');
+    const direct = it.src || MEDIA + it.id + '.mp4';   // converted copy; Drive player if it isn't there yet
     $('#playerHelp').hidden = true;
     if (direct) {
       const v = document.createElement('video');

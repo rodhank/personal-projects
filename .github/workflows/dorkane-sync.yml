@@ -29,7 +29,7 @@ jobs:
         run: |
           sudo apt-get -qq update && sudo apt-get -qq install -y ffmpeg >/dev/null
           pip install -q gdown
-          python3 media.py
+          python3 -u media.py
       - name: Publish if anything changed
         run: |
           if git diff --quiet; then echo "No changes"; exit 0; fi

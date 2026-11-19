@@ -72,6 +72,7 @@ for name, fid in folders(root):
                 films.append({'t': title(fname), 'id': i, 'kind': kind})
 
 td.sort(key=lambda x: not x['sel'])  # selected first, keep order otherwise
+_seen = set(); td = [x for x in td if not (x['t'].lower() in _seen or _seen.add(x['t'].lower()))]  # same title twice: keep the first
 if not td and not films:
     sys.exit('Nothing found in the Drive folder (is it shared "anyone with the link"?). data.js left unchanged.')
 old = open('../data.js', encoding='utf-8').read()
