@@ -1,0 +1,42 @@
+# XcodeGen spec. On a Mac:  brew install xcodegen && cd ios && xcodegen generate && open LidarBrowser.xcodeproj
+name: LidarBrowser
+options:
+  bundleIdPrefix: com.dorkane
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  LidarBrowser:
+    type: application
+    platform: iOS
+    sources:
+      - path: LidarBrowser
+        excludes:
+          - Info.plist
+          - Resources/**
+      - path: LidarBrowser/Resources/lidar-shim.js
+        buildPhase: resources
+      - path: ../web
+        type: folder
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dorkane.lidarbrowser
+        INFOPLIST_FILE: LidarBrowser/Info.plist
+        TARGETED_DEVICE_FAMILY: "1,2"
+        CODE_SIGN_STYLE: Automatic
+        # Set your Apple team in Xcode (Signing & Capabilities) or here:
+        DEVELOPMENT_TEAM: ""
+        ENABLE_PREVIEWS: NO
+schemes:
+  LidarBrowser:
+    build:
+      targets:
+        LidarBrowser: all
+    run:
+      config: Debug

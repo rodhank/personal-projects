@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WebXR depth – example</title>
+<style>
+  body { margin: 0; font: 15px system-ui, sans-serif; background: #111; color: #eee; }
+  #ui { position: fixed; left: 0; right: 0; bottom: 0; padding: 16px; background: rgba(0,0,0,.6); }
+  button { font: inherit; padding: 10px 16px; border-radius: 10px; border: 0; background: #2b7fff; color: #fff; }
+  #reading { font-size: 34px; font-weight: 700; margin: 8px 0; }
+  #cross { position: fixed; left: 50%; top: 50%; width: 24px; height: 24px; margin: -12px; border: 2px solid #fff; border-radius: 50%; }
+</style>
+</head>
+<body>
+<!-- Plain WebXR code, the same that runs on Android Chrome. In LiDAR Browser on iPhone it gets real LiDAR depth. -->
+<div id="cross" hidden></div>
+<div id="ui">
+  <div id="reading">—</div>
+  <div id="info">Distance to whatever is at the centre of the screen.</div>
+  <p><button id="go">Start AR depth</button></p>
+</div>
+<script>
+const go = document.getElementById('go');
+let session = null;
+window.__xrResults = { frames: 0, depthFrames: 0, last: null, errors: [] };
+
+async function start() {
+  if (session) { session.end(); return; }
+  if (!navigator.xr || !(await navigator.xr.isSessionSupported('immersive-ar'))) {
+    document.getElementById('info').textContent = 'WebXR AR is not available in this browser.';
+    return;
+  }
+  session = await navigator.xr.requestSession('immersive-ar', {
+    requiredFeatures: ['depth-sensing'],
+    optionalFeatures: ['dom-overlay', 'local-floor'],
+    domOverlay: { root: document.getElementById('ui') },
+    depthSensing: { usagePreference: ['cpu-optimized'], dataFormatPreference: ['float32', 'luminance-alpha'] },
+  });
+  const canvas = document.createElement('canvas');
+  const gl = canvas.getContext('webgl', { xrCompatible: true });
+  await session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
+  const space = await session.requestReferenceSpace('local');
+  const floorSpace = await session.requestReferenceSpace('local-floor').catch(() => null);
+  document.getElementById('cross').hidden = false;
+  go.textContent = 'Stop';
+  session.addEventListener('end', () => { session = null; go.textContent = 'Start AR depth'; document.getElementById('cross').hidden = true; });
+
+  session.requestAnimationFrame(function onFrame(time, frame) {
+    session.requestAnimationFrame(onFrame);
+    const r = window.__xrResults;
+    r.frames++;
+    const pose = frame.getViewerPose(space);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, session.renderState.baseLayer.framebuffer);
+    gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+    if (!pose) return;
+    const depth = frame.getDepthInformation(pose.views[0]);
+    if (!depth) return;
+    r.depthFrames++;
+    const meters = depth.getDepthInMeters(0.5, 0.5);
+    const p = pose.transform.position;
+    const fp = floorSpace ? frame.getViewerPose(floorSpace) : null;
+    r.last = { meters, width: depth.width, height: depth.height, position: [p.x, p.y, p.z],
+               heightAboveFloor: fp ? fp.transform.position.y : null, format: session.depthDataFormat, usage: session.depthUsage };
+    document.getElementById('reading').textContent = meters > 0 ? meters.toFixed(2) + ' m' : '—';
+    document.getElementById('info').textContent =
+      `depth ${depth.width}×${depth.height} · phone at ${p.x.toFixed(2)}, ${p.y.toFixed(2)}, ${p.z.toFixed(2)}` +
+      (fp ? ` · ${fp.transform.position.y.toFixed(2)} m above floor` : '');
+  });
+}
+go.onclick = () => start().catch(e => { window.__xrResults.errors.push(e.message); document.getElementById('info').textContent = e.message; });
+</script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>three.js AR + LiDAR depth – example</title>
+<style>
+  body { margin: 0; font: 15px system-ui, sans-serif; background: #111; color: #eee; }
+  #ui { position: fixed; left: 0; right: 0; bottom: 0; padding: 16px; background: rgba(0,0,0,.55); }
+  button { font: inherit; padding: 10px 16px; border-radius: 10px; border: 0; background: #2b7fff; color: #fff; }
+</style>
+<script type="importmap">{ "imports": { "three": "../vendor/three.module.js" } }</script>
+</head>
+<body>
+<!-- Standard three.js WebXR code. A ball is dropped where the LiDAR says the surface in front of you is. -->
+<div id="ui"><div id="info">Spinning cube in AR; tap "Drop ball" to place a ball on the real surface at screen centre.</div>
+<p><button id="go">Start AR</button> <button id="drop" disabled>Drop ball</button></p></div>
+<script type="module">
+import * as THREE from 'three';
+window.__threeResults = { frames: 0, depthReads: 0, balls: 0, errors: [], cam: null };
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(innerWidth, innerHeight);
+renderer.xr.enabled = true;
+renderer.xr.setReferenceSpaceType('local');
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.01, 50);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 2));
+const cube = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.15), new THREE.MeshStandardMaterial({ color: 0x2b7fff }));
+cube.position.set(0, 0, -0.8);
+scene.add(cube);
+
+let session = null, wantDrop = false;
+document.getElementById('go').onclick = async () => {
+  if (session) { session.end(); return; }
+  try {
+    session = await navigator.xr.requestSession('immersive-ar', {
+      requiredFeatures: ['local'], optionalFeatures: ['depth-sensing', 'dom-overlay'],
+      domOverlay: { root: document.getElementById('ui') },
+      depthSensing: { usagePreference: ['cpu-optimized'], dataFormatPreference: ['float32'] },
+    });
+    await renderer.xr.setSession(session);
+    document.getElementById('go').textContent = 'Stop';
+    document.getElementById('drop').disabled = false;
+    session.addEventListener('end', () => { session = null; document.getElementById('go').textContent = 'Start AR'; document.getElementById('drop').disabled = true; });
+  } catch (e) { window.__threeResults.errors.push(e.message); document.getElementById('info').textContent = e.message; }
+};
+document.getElementById('drop').onclick = () => { wantDrop = true; };
+
+renderer.setAnimationLoop((t, frame) => {
+  const r = window.__threeResults;
+  cube.rotation.y = t / 800;
+  if (frame) {
+    r.frames++;
+    const cam = renderer.xr.getCamera();
+    r.cam = cam.position.toArray().map(v => +v.toFixed(3));
+    const pose = frame.getViewerPose(renderer.xr.getReferenceSpace());
+    if (pose && wantDrop && frame.session.depthUsage) {
+      const d = frame.getDepthInformation(pose.views[0]);
+      if (d) {
+        r.depthReads++;
+        const m = d.getDepthInMeters(0.5, 0.5);
+        if (m > 0) {
+          const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(cam.quaternion);
+          const ball = new THREE.Mesh(new THREE.SphereGeometry(0.04, 24, 16), new THREE.MeshStandardMaterial({ color: 0xffb020 }));
+          ball.position.copy(cam.position).addScaledVector(dir, m);
+          scene.add(ball);
+          r.balls++;
+          document.getElementById('info').textContent = `Ball placed ${m.toFixed(2)} m away`;
+        }
+      }
+      wantDrop = false;
+    }
+  }
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

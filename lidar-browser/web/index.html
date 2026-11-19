@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>LiDAR Bridge</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/app.css">
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three.module.js" } }
+  </script>
+</head>
+<body>
+<div id="app">
+  <header id="topbar">
+    <div class="brand">LiDAR<span>Bridge</span></div>
+    <div id="conn" class="pill off" title="Connection">Disconnected</div>
+    <div id="device" class="muted small"></div>
+    <div class="spacer"></div>
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-view="2d">2D</button>
+      <button class="tab" data-view="3d">3D</button>
+      <button class="tab" data-view="split">Split</button>
+    </div>
+    <button id="panelToggle" class="iconbtn" title="Controls">☰</button>
+  </header>
+
+  <main id="main" class="view-2d">
+    <section id="stage">
+      <div id="view2d" class="pane">
+        <canvas id="depthCanvas"></canvas>
+        <div id="hud2d" class="hud">
+          <select id="mode" title="What to show">
+            <option value="depth">Depth map</option>
+            <option value="blend">Camera + depth</option>
+            <option value="camera">Camera</option>
+            <option value="normals">Surface normals</option>
+            <option value="contours">Depth contours</option>
+            <option value="confidence">Confidence</option>
+          </select>
+          <span id="legend" class="legend"><canvas id="legendCanvas" width="160" height="10"></canvas><span id="legendMin">0</span><span id="legendMax">5</span></span>
+        </div>
+        <div id="emptyState" class="empty">
+          <h2>Waiting for LiDAR data</h2>
+          <p>Open this page in the <b>LiDAR Browser</b> app on a LiDAR iPhone/iPad. On Android Chrome, use <b>Start Android AR depth</b>. You can also connect to a phone running the Wi-Fi bridge (e.g. <code>ws://192.168.1.20:8081</code>).</p>
+          <p id="androidHint" hidden>This browser supports WebXR depth sensing – tap <b>Start Android AR depth</b> in the controls.</p>
+        </div>
+      </div>
+      <div id="view3d" class="pane"></div>
+    </section>
+
+    <aside id="panel">
+      <details open>
+        <summary>Connection</summary>
+        <label class="row">Phone address
+          <input id="wsUrl" type="text" spellcheck="false" placeholder="ws://192.168.1.20:8081">
+        </label>
+        <div class="row btns">
+          <button id="connectBtn" class="primary">Connect</button>
+          <button id="disconnectBtn">Disconnect</button>
+        </div>
+        <div class="row btns" id="xrRow" hidden>
+          <button id="xrBtn">Start Android AR depth</button>
+        </div>
+        <p id="connMsg" class="muted small"></p>
+      </details>
+
+      <details open>
+        <summary>Live readings</summary>
+        <div class="stats">
+          <div><span>Center distance</span><b id="sCenter">—</b></div>
+          <div><span>Nearest / farthest</span><b id="sMinMax">—</b></div>
+          <div><span>Mean / median</span><b id="sMean">—</b></div>
+          <div><span>Valid pixels</span><b id="sValid">—</b></div>
+          <div><span>Confidence high / med / low</span><b id="sConf">—</b></div>
+          <div><span>Tracking</span><b id="sTracking">—</b></div>
+          <div><span>Position (m)</span><b id="sPos">—</b></div>
+          <div><span>Heading / pitch</span><b id="sAngles">—</b></div>
+          <div><span>Light</span><b id="sLight">—</b></div>
+          <div><span>Planes / mesh</span><b id="sScene">—</b></div>
+          <div><span>Frame rate / data</span><b id="sRate">—</b></div>
+          <div><span>Latency</span><b id="sLatency">—</b></div>
+          <div><span>Depth resolution</span><b id="sRes">—</b></div>
+        </div>
+        <canvas id="histogram" width="300" height="70" title="Depth histogram"></canvas>
+      </details>
+
+      <details open>
+        <summary>Display</summary>
+        <label class="row">Colours
+          <select id="colormap"><option>turbo</option><option>inferno</option><option>viridis</option><option>gray</option></select>
+        </label>
+        <label class="row">Near (m) <input id="rangeMin" type="range" min="0" max="10" step="0.05" value="0.2"><output id="rangeMinOut">0.20</output></label>
+        <label class="row">Far (m) <input id="rangeMax" type="range" min="0.2" max="10" step="0.05" value="4"><output id="rangeMaxOut">4.00</output></label>
+        <label class="row check"><input id="autoRange" type="checkbox" checked> Auto range (5–95 %)</label>
+        <label class="row">Min confidence
+          <select id="confMin"><option value="0">Low (all)</option><option value="1" selected>Medium</option><option value="2">High only</option></select>
+        </label>
+        <label class="row">Rotation
+          <select id="rotation"><option value="auto">Auto</option><option value="0">0°</option><option value="90">90°</option><option value="180">180°</option><option value="270">270°</option></select>
+        </label>
+        <label class="row">Camera blend <input id="blend" type="range" min="0" max="1" step="0.05" value="0.55"></label>
+        <label class="row">Contour step (cm) <input id="contourStep" type="range" min="2" max="100" step="1" value="10"><output id="contourOut">10</output></label>
+        <label class="row check"><input id="smoothPixels" type="checkbox"> Smooth pixels</label>
+      </details>
+
+      <details>
+        <summary>Measure</summary>
+        <p class="muted small">Tap the 2D view: first tap = point A, second = point B. Points stay fixed in the room as you move.</p>
+        <div class="stats">
+          <div><span>A → B distance</span><b id="mDist">—</b></div>
+          <div><span>Height difference</span><b id="mHeight">—</b></div>
+          <div><span>A / B from camera</span><b id="mCam">—</b></div>
+        </div>
+        <div class="row btns"><button id="measureClear">Clear points</button></div>
+      </details>
+
+      <details>
+        <summary>3D view</summary>
+        <label class="row check"><input id="showLive" type="checkbox" checked> Live point cloud</label>
+        <label class="row check"><input id="accumulate" type="checkbox"> Build 3D map (accumulate)</label>
+        <label class="row check"><input id="showAccumulated" type="checkbox" checked> Show 3D map</label>
+        <label class="row check"><input id="showMesh" type="checkbox" checked> ARKit scene mesh</label>
+        <label class="row check"><input id="meshWireframe" type="checkbox"> Mesh wireframe</label>
+        <label class="row">Mesh colours
+          <select id="meshColor"><option value="class">By surface type</option><option value="plain">Plain</option></select>
+        </label>
+        <label class="row check"><input id="showPlanes" type="checkbox" checked> Detected planes</label>
+        <label class="row check"><input id="showCamera" type="checkbox" checked> Phone + path</label>
+        <label class="row check"><input id="followDevice" type="checkbox"> Follow phone</label>
+        <label class="row">Point colours
+          <select id="colorBy"><option value="rgb">Camera colour</option><option value="depth">Depth colour</option></select>
+        </label>
+        <label class="row">Point size <input id="pointSize" type="range" min="0.002" max="0.04" step="0.001" value="0.012"></label>
+        <label class="row">Map voxel (cm) <input id="voxel" type="range" min="0.5" max="10" step="0.5" value="2"><output id="voxelOut">2</output></label>
+        <label class="row">Max range (m) <input id="maxRange" type="range" min="0.5" max="10" step="0.5" value="5"><output id="maxRangeOut">5</output></label>
+        <div class="stats"><div><span>Map points</span><b id="sMap">0</b></div></div>
+        <div class="row btns"><button id="clearMap">Clear map</button><button id="resetView">Reset view</button></div>
+      </details>
+
+      <details>
+        <summary>Stream settings (phone)</summary>
+        <label class="row">Frame rate
+          <select id="fps"><option>5</option><option>10</option><option selected>15</option><option>30</option><option>60</option></select>
+        </label>
+        <label class="row check"><input id="rgb" type="checkbox" checked> Send camera image</label>
+        <label class="row">Image width
+          <select id="rgbWidth"><option>320</option><option selected>640</option><option>960</option><option>1280</option></select>
+        </label>
+        <label class="row">JPEG quality <input id="jpegQuality" type="range" min="0.2" max="0.95" step="0.05" value="0.6"></label>
+        <label class="row check"><input id="smoothed" type="checkbox"> Smoothed depth (ARKit temporal filter)</label>
+        <label class="row check"><input id="meshStream" type="checkbox" checked> Send scene mesh</label>
+        <label class="row check"><input id="planesStream" type="checkbox" checked> Send planes</label>
+        <div class="row btns"><button id="resetTracking">Reset tracking</button><button id="requestMesh">Resend mesh</button></div>
+      </details>
+
+      <details>
+        <summary>Export &amp; record</summary>
+        <div class="row btns wrap">
+          <button id="exDepth">Depth PNG (16-bit mm)</button>
+          <button id="exConf">Confidence PNG</button>
+          <button id="exRGB">Camera JPG</button>
+          <button id="exView">2D view PNG</button>
+          <button id="exMeta">Frame JSON</button>
+          <button id="exRaw">Raw depth .bin</button>
+          <button id="exFramePly">Frame point cloud PLY</button>
+          <button id="exMapPly">3D map PLY</button>
+          <button id="exMesh">Mesh OBJ</button>
+          <button id="ex3d">3D view PNG</button>
+        </div>
+        <label class="row">Record every Nth frame <input id="recEvery" type="number" min="1" max="30" value="1"></label>
+        <div class="row btns">
+          <button id="recBtn" class="rec">● Record</button>
+          <button id="recSave" disabled>Save ZIP</button>
+        </div>
+        <p id="recInfo" class="muted small">Saves depth PNG + confidence + camera JPG + poses for every frame.</p>
+      </details>
+    </aside>
+  </main>
+  <div id="toast" hidden></div>
+</div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

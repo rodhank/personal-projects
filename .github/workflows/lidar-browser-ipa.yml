@@ -1,0 +1,80 @@
+# Builds LiDAR Browser on a free GitHub macOS runner and produces an unsigned
+# LidarBrowser.ipa you can install from Windows with Sideloadly (which signs it
+# with your Apple ID).
+#
+# How to use:
+#   1. Push this whole folder to a GitHub repo (public = free macOS minutes).
+#   2. Open the repo's "Actions" tab -> "Build iPhone app (.ipa)" -> "Run workflow".
+#   3. When it finishes (~5-10 min), open the run and download "LidarBrowser-ipa"
+#      under Artifacts. Unzip it to get LidarBrowser.ipa.
+#   4. Drag LidarBrowser.ipa into Sideloadly on your PC (see README).
+name: Build iPhone app (.ipa)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths: ["lidar-browser/**", ".github/workflows/lidar-browser-ipa.yml"]
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: cd lidar-browser/ios && xcodegen generate
+
+      - name: Build (Release, device, unsigned)
+        run: |
+          set -o pipefail
+          cd lidar-browser/ios
+          xcodebuild \
+            -project LidarBrowser.xcodeproj \
+            -scheme LidarBrowser \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build 2>&1 | tee build.log | grep -E "error:|warning:|BUILD (SUCCEEDED|FAILED)" || true
+          # grep above only filters what's shown; fail the step if xcodebuild failed
+          grep -q "BUILD SUCCEEDED" build.log
+
+      - name: Package .ipa
+        run: |
+          set -e
+          cd lidar-browser/ios
+          APP="build/Build/Products/Release-iphoneos/LidarBrowser.app"
+          test -d "$APP" || { echo "App bundle not found at $APP"; exit 1; }
+          rm -rf Payload LidarBrowser.ipa
+          mkdir Payload
+          cp -R "$APP" Payload/
+          # ditto keeps symlinks and permissions intact (plain zip can break bundles)
+          ditto -c -k --sequesterRsrc --keepParent Payload LidarBrowser.ipa
+          ls -lh LidarBrowser.ipa
+          unzip -l LidarBrowser.ipa | head -20
+
+      - name: Upload .ipa
+        uses: actions/upload-artifact@v4
+        with:
+          name: LidarBrowser-ipa
+          path: lidar-browser/ios/LidarBrowser.ipa
+          retention-days: 30
+
+      - name: Upload build log (always, for debugging)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: lidar-browser/ios/build.log
+          if-no-files-found: ignore
+          retention-days: 14
