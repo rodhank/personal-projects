@@ -110,3 +110,7 @@ footer a:hover { color: var(--accent); }
   .card .cap { font-size: 13px; padding: 18px 8px 6px; }
   .chips { top: 56px; }
 }
+
+.player-help { margin-top: 12px; text-align: center; color: #aaa; font-size: 15px; }
+.player-help a { color: var(--accent); font-weight: 600; margin-inline-start: 6px; text-decoration: underline; text-underline-offset: 3px; }
+.player-help[hidden] { display: none; }

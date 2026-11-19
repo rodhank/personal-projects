@@ -29,6 +29,8 @@
       fr.allow = 'autoplay; fullscreen'; fr.allowFullscreen = true;
       f.appendChild(fr);
     }
+    $('#playerHelp').hidden = !!it.src;
+    if (!it.src) $('#driveLink').href = 'https://drive.google.com/file/d/' + it.id + '/view';
     $('#prevBtn').style.visibility = $('#nextBtn').style.visibility = list.length > 1 ? 'visible' : 'hidden';
   }
   function close() {
