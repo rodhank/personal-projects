@@ -91,7 +91,9 @@ final class BrowserModel: ObservableObject {
 
     func back() { webView.goBack() }
     func forward() { webView.goForward() }
-    func reloadOrStop() { isLoading ? webView.stopLoading() : webView.reload() }
+    func reloadOrStop() {
+        if isLoading { webView.stopLoading() } else { webView.reload() }
+    }
     func home() { load(BrowserModel.homeURL) }
     func stopLidar() { container.bridge.stop(notifyPage: true) }
     func appBecameActive() { container.bridge.resumeIfNeeded() }
