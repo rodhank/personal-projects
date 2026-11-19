@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>דור קנה — עריכת וידאו ו-TouchDesigner</title>
+<meta name="description" content="תיק העבודות של דור קנה: עריכת וידאו, סרטים ועבודות TouchDesigner בזמן אמת.">
+<meta property="og:title" content="דור קנה — תיק עבודות">
+<meta property="og:description" content="עריכת וידאו, סרטים ועבודות TouchDesigner.">
+<meta property="og:image" content="media/hero.jpg">
+<meta name="theme-color" content="#0b0b0c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header id="top" class="bar">
+  <a href="#/" class="logo">דור קנה</a>
+  <nav>
+    <a href="#/touchdesigner" data-nav="touchdesigner">TouchDesigner</a>
+    <a href="#/video" data-nav="video">וידאו</a>
+    <a href="#/contact" data-nav="contact">צור קשר</a>
+  </nav>
+</header>
+
+<main>
+  <!-- ============ HOME ============ -->
+  <section id="page-home" class="page">
+    <div class="hero">
+      <video id="heroVideo" class="hero-video" src="media/hero.mp4" poster="media/hero.jpg" autoplay muted loop playsinline preload="auto"></video>
+      <div class="hero-shade"></div>
+      <div class="hero-text">
+        <h1>דור קנה</h1>
+        <p class="tagline">עריכת וידאו · TouchDesigner · אמנות בזמן אמת</p>
+        <p class="contact-line">
+          <a href="mailto:dorkane12@gmail.com">dorkane12@gmail.com</a>
+          <span class="dot">·</span>
+          <a href="tel:+972547934024" dir="ltr">054-793-4024</a>
+        </p>
+        <button class="btn play-reel" data-play="showcase"><span class="tri"></span> צפייה בשואוקייס עם סאונד</button>
+      </div>
+      <a href="#choose" class="scroll-hint" aria-label="לגלול למטה"></a>
+    </div>
+
+    <div id="choose" class="choose">
+      <a class="choice" href="#/touchdesigner">
+        <div class="choice-bg" id="choiceTd"></div>
+        <div class="choice-text"><span class="small">עבודות</span><h2>TouchDesigner</h2><span class="go">לכל העבודות ←</span></div>
+      </a>
+      <a class="choice" href="#/video">
+        <div class="choice-bg" id="choiceVideo"></div>
+        <div class="choice-text"><span class="small">עבודות</span><h2>וידאו</h2><span class="go">לכל העבודות ←</span></div>
+      </a>
+    </div>
+
+    <section class="about">
+      <div>
+        <h3>קצת עליי</h3>
+        <p>אני דור קנה, עורך וידאו ואמן דיגיטלי. אני עורך סרטים, קליפים ותוכן, ובונה עבודות ויזואליות אינטראקטיביות בזמן אמת ב-TouchDesigner — מיצבים, ויג׳יי, הקרנות ועבודות שמגיבות לסאונד, לתנועה ולגוף.</p>
+        <a class="btn ghost" href="#/contact">בואו נעבוד יחד</a>
+      </div>
+    </section>
+  </section>
+
+  <!-- ============ TOUCHDESIGNER ============ -->
+  <section id="page-touchdesigner" class="page" hidden>
+    <div class="page-head">
+      <h2>עבודות TouchDesigner</h2>
+      <p>ויזואלים בזמן אמת, עבודות שמגיבות לסאונד ולתנועה, סימולציות וניסויים. לחצו על עבודה כדי לצפות.</p>
+      <button class="btn" data-play="tdreel"><span class="tri"></span> סרטון תיק העבודות</button>
+    </div>
+    <div class="chips" id="tdChips"></div>
+    <div class="grid" id="tdGrid"></div>
+  </section>
+
+  <!-- ============ VIDEO ============ -->
+  <section id="page-video" class="page" hidden>
+    <div class="page-head">
+      <h2>עבודות וידאו</h2>
+      <p>סרטים, דוקו ועבודות עריכה. לחצו על סרט כדי לצפות.</p>
+    </div>
+    <h3 class="sub">סרטים</h3>
+    <div class="grid films" id="filmGrid"></div>
+    <h3 class="sub">קצרים וניסויים</h3>
+    <div class="grid films" id="shortGrid"></div>
+  </section>
+
+  <!-- ============ CONTACT ============ -->
+  <section id="page-contact" class="page" hidden>
+    <div class="page-head center">
+      <h2>צור קשר</h2>
+      <p>לפרויקטים, עריכה, ויזואלים להופעות ומיצבים — אשמח לשמוע.</p>
+    </div>
+    <div class="contact-cards">
+      <a class="ccard" href="mailto:dorkane12@gmail.com"><span>מייל</span><b>dorkane12@gmail.com</b></a>
+      <a class="ccard" href="tel:+972547934024"><span>טלפון</span><b dir="ltr">054-793-4024</b></a>
+      <a class="ccard" href="https://wa.me/972547934024" target="_blank" rel="noopener"><span>וואטסאפ</span><b>שליחת הודעה</b></a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>© <span id="year"></span> דור קנה</span>
+  <span><a href="mailto:dorkane12@gmail.com">dorkane12@gmail.com</a> · <a href="tel:+972547934024" dir="ltr">054-793-4024</a></span>
+</footer>
+
+<!-- player -->
+<div id="player" class="player" hidden>
+  <div class="player-box">
+    <div class="player-top">
+      <span id="playerTitle"></span>
+      <div class="player-actions">
+        <button id="prevBtn" aria-label="הקודם">→</button>
+        <button id="nextBtn" aria-label="הבא">←</button>
+        <button id="closeBtn" aria-label="סגירה">✕</button>
+      </div>
+    </div>
+    <div class="frame" id="frame"></div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
