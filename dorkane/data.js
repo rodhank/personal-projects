@@ -234,31 +234,36 @@ window.SITE = {
    "t": "Music",
    "id": "1Yc7v5TV0pBNyaF__fQtrYlkqBpDN_wT-",
    "tag": "td",
-   "sel": true
+   "sel": true,
+   "m": 1
   },
   {
    "t": "Music 10",
    "id": "1EplmCHQoVjzUD3duXODKyYUJZWrQdYuB",
    "tag": "td",
-   "sel": true
+   "sel": true,
+   "m": 1
   },
   {
    "t": "Music 2",
    "id": "1odNrKAUU3yGeDyjhgwuFcp3CYq1xEPVG",
    "tag": "td",
-   "sel": true
+   "sel": true,
+   "m": 1
   },
   {
    "t": "Music 3",
    "id": "1D5yuxmQIQa-hxHDOYdcRB3bUvJne2fgp",
    "tag": "td",
-   "sel": true
+   "sel": true,
+   "m": 1
   },
   {
    "t": "Nerves",
    "id": "1okkk88ritbYr0d5VZPydY10RQTFGgA9N",
    "tag": "td",
-   "sel": true
+   "sel": true,
+   "m": 1
   },
   {
    "t": "Particles 2",
@@ -379,13 +384,6 @@ window.SITE = {
    "m": 1
   },
   {
-   "t": "Kinect",
-   "id": "1eOfzygvr1jFu2cJOwTchg5KhjT4QmQAq",
-   "tag": "abstract",
-   "sel": false,
-   "m": 1
-  },
-  {
    "t": "Leaves",
    "id": "16Ve6wgPfu8-a2gpVym8DhZMGlO4yta90",
    "tag": "abstract",
@@ -477,13 +475,6 @@ window.SITE = {
    "m": 1
   },
   {
-   "t": "Vortex in",
-   "id": "1Rk50DPH4zGXEkjo68qMXsFMl0r0r666e",
-   "tag": "abstract",
-   "sel": false,
-   "m": 1
-  },
-  {
    "t": "AI with music 2",
    "id": "1XYK5Hu4VdCIdMRUdoCQdNBskWtp0403G",
    "tag": "sound",
@@ -493,13 +484,6 @@ window.SITE = {
   {
    "t": "Beating bleeding heart",
    "id": "1ZziXd_jQvNisyM6NdnHW969hFj2vo-zF",
-   "tag": "sound",
-   "sel": false,
-   "m": 1
-  },
-  {
-   "t": "Faces",
-   "id": "1R5bFwxOtuCcAdO1-D7gs1rKTzRIxTufh",
    "tag": "sound",
    "sel": false,
    "m": 1
@@ -526,22 +510,8 @@ window.SITE = {
    "m": 1
   },
   {
-   "t": "Particles 2",
-   "id": "1HfmS0slOsRxDZBDqWd34XpdiTbjWLGV3",
-   "tag": "sound",
-   "sel": false,
-   "m": 1
-  },
-  {
    "t": "VJ loop",
    "id": "1cYXkbSeucnq3E_d0jW_fhh68x2TcWPBH",
-   "tag": "sound",
-   "sel": false,
-   "m": 1
-  },
-  {
-   "t": "Web",
-   "id": "1T9VzF8Twv3sGR09eVyWh4y-ivfnYIqxc",
    "tag": "sound",
    "sel": false,
    "m": 1
