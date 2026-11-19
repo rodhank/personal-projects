@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<title>NOISE VISION</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="gl"></canvas>
+<video id="cam" playsinline muted autoplay></video>
+
+<div id="start" class="overlay">
+  <h1>NOISE VISION</h1>
+  <p>העולם נראה רק כשאתה זז.<br>עצור — והכל נעלם ברעש.<br>לחץ על המסך כדי לשלוח <b>PULSE</b>.</p>
+  <p class="warn">⚠️ אזהרת הבהובים: האתר מציג רעש מהבהב.</p>
+  <button id="go">התחל</button>
+  <p id="err" class="err" hidden></p>
+</div>
+
+<button id="gear" class="fab" hidden aria-label="הגדרות">⚙</button>
+<button id="pulseBtn" class="fab pulse" hidden>PULSE</button>
+<div id="status" hidden></div>
+
+<div id="panel" hidden>
+  <h2>הגדרות</h2>
+  <label>מצב
+    <select id="mode">
+      <option value="0">תנועה (מצלמה זזה → העולם מופיע)</option>
+      <option value="1">קלאסי (כמו MOTUS — אזורים בהירים זזים)</option>
+    </select>
+  </label>
+  <label>רגישות לתנועה <input id="sens" type="range" min="0" max="1" step="0.01" value="0.55"></label>
+  <label>הפרדת עצמים (0 = הכל זז, גבוה = רק עצמים עם טקסטורה) <input id="sep" type="range" min="0" max="1" step="0.01" value="0.35"></label>
+  <label>גודל גרעין <input id="grain" type="range" min="1" max="8" step="1" value="3"></label>
+  <label>מהירות החלקה <input id="speed" type="range" min="0.2" max="3" step="0.1" value="1"></label>
+  <label>סף בהירות (קלאסי) <input id="thr" type="range" min="0" max="1" step="0.01" value="0.5"></label>
+  <label>משך PULSE <input id="pdur" type="range" min="0.6" max="4" step="0.1" value="1.8"></label>
+  <label>דעיכת הד <input id="decay" type="range" min="0.9" max="0.995" step="0.001" value="0.975"></label>
+  <div class="row">
+    <label>צבע 1 <input id="colA" type="color" value="#000000"></label>
+    <label>צבע 2 <input id="colB" type="color" value="#ffffff"></label>
+  </div>
+  <label class="chk"><input id="ai" type="checkbox"> עומק AI ל-PULSE (מוריד מודל ~25MB)</label>
+  <label class="chk"><input id="clap" type="checkbox"> מחיאת כף = PULSE (מיקרופון)</label>
+  <label class="chk"><input id="debug" type="checkbox"> מצב דיבאג (הצג מצלמה + תנועה)</label>
+  <button id="close">סגור</button>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
