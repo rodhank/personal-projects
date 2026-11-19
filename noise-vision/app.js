@@ -432,6 +432,15 @@ const dh = {
   },
 };
 
+// ---------------------------------------------------------------- torch (works in iOS Safari 17.5+ on the rear camera)
+const light = { level: 1, dark: false, torch: false, told: false, track: null };
+async function toggleTorch(){
+  const t = light.track; if (!t) return;
+  try { await t.applyConstraints({ advanced: [{ torch: !light.torch }] }); light.torch = !light.torch;
+        $('torch').classList.toggle('on', light.torch); $('torch').classList.remove('hint'); }
+  catch (e){ setStatus('הפנס לא נתמך בדפדפן הזה', 3000); }
+}
+
 // ---------------------------------------------------------------- clap detection
 let audio = null;
 async function setClap(on){
@@ -480,6 +489,15 @@ function frameLoop(){
     target(flowS); use(PR.fs); bindTex('src', flowF, 0); bindTex('prevF', fPrev, 1); gl.uniform2i(cur.u.size, gw, gh); draw();
   }
 
+  // ---- low light: measure brightness; in the dark raise the motion dead-zone (sensor noise) and offer the torch
+  if (frame % 20 === 0){
+    target(c); const px = new Uint8Array((gw/4) * (gh/4) * 4); gl.readPixels(0, 0, gw/4, gh/4, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    let sum = 0; for (let i = 0; i < px.length; i += 4) sum += px[i]; light.level = sum / (px.length / 4) / 255;
+    light.dark = light.dark ? light.level < 0.12 : light.level < 0.08;
+    $('torch').classList.toggle('hint', light.dark && !light.torch);
+    if (light.dark && !light.torch && !light.told){ light.told = true; setStatus('חשוך — הדלק פנס 🔦 כדי שהעולם יופיע', 4000); }
+  }
+
   // ---- depth buffer: carried by the flow every frame, refreshed whenever an inference lands
   const swapD = () => { dh.ix ^= 1; };
   target(dHist[dh.ix ^ 1]); use(PR.dadv); bindTex('hist', dHist[dh.ix], 0); bindTex('flowT', flowS, 1);
@@ -508,7 +526,7 @@ function frameLoop(){
   bindTex('prevS', sIn, 0); bindTex('flowT', flowS, 1); bindTex('grayT', g, 2); bindTex('depthH', depthNow, 3);
   const u = cur.u;
   gl.uniform2f(u.gridRes, gridW, gridH); gl.uniform2f(u.k, kx, ky); gl.uniform2f(u.graySize, gw, gh);
-  gl.uniform1f(u.frame, frame % 10000); gl.uniform1f(u.sens, P.sens); gl.uniform1f(u.speed, P.speed);
+  gl.uniform1f(u.frame, frame % 10000); gl.uniform1f(u.sens, P.sens + (light.dark ? 0.6 : 0) + Math.max(0, 0.15 - light.level) * 3); gl.uniform1f(u.speed, P.speed);
   gl.uniform1f(u.thr, P.thr); gl.uniform1f(u.sep, P.sep); gl.uniform1f(u.mode, P.mode); gl.uniform1f(u.decay, P.decay);
   gl.uniform1f(u.pulseOn, pulse.on ? 1 : 0); gl.uniform1f(u.pulseR, pr); gl.uniform1f(u.pulseBand, 0.06);
   gl.uniform1f(u.depthMode, pulse.depthMode); gl.uniform1f(u.aspect, innerWidth / innerHeight);
@@ -532,16 +550,16 @@ async function start(){
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: false,
       video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 60 } } });
-    video.srcObject = stream; await video.play();
+    video.srcObject = stream; await video.play(); light.track = stream.getVideoTracks()[0];
   } catch (e){ $('err').textContent = 'אין גישה למצלמה: ' + (e.message || e.name); $('err').hidden = false; return; }
   try { initGL(); } catch (e){ fatal('שגיאת שיידר: ' + e.message); return; }
-  $('start').hidden = true; $('gear').hidden = false; $('pulseBtn').hidden = false;
+  $('start').hidden = true; $('gear').hidden = false; $('pulseBtn').hidden = false; $('torch').hidden = false;
   running = true; frameLoop();
   window.__nv = { P, firePulse, get frame(){ return frame; }, get grid(){ return [gridW, gridH]; }, get flowSize(){ return [gw, gh]; },
     step: frameLoop,
     readState(){ const S = state[frame & 1]; target(S); const a = new Float32Array(S.w * S.h * 4); gl.readPixels(0, 0, S.w, S.h, gl.RGBA, gl.FLOAT, a); return Array.from(a); },
     readDepth(){ const T = dHist[dh.ix]; target(T); const a = new Float32Array(gw * gh * 4); gl.readPixels(0, 0, gw, gh, gl.RGBA, gl.FLOAT, a); return { a: Array.from(a), lNear: dh.lNear, lFar: dh.lFar, valid: dh.valid, info: dh.info, ms: dh.msAvg }; },
-    get pulse(){ return pulse; },
+    get pulse(){ return pulse; }, get light(){ return light; },
     readFlow(){ target(flowS); const a = new Float32Array(gw * gh * 4); gl.readPixels(0, 0, gw, gh, gl.RGBA, gl.FLOAT, a); return Array.from(a); } };
 }
 
@@ -555,6 +573,7 @@ function bind(){
   $('gear').addEventListener('click', (e) => { e.stopPropagation(); $('panel').hidden = false; });
   $('close').addEventListener('click', () => $('panel').hidden = true);
   $('pulseBtn').addEventListener('click', (e) => { e.stopPropagation(); firePulse(); });
+  $('torch').addEventListener('click', (e) => { e.stopPropagation(); toggleTorch(); });
   canvas.addEventListener('pointerdown', () => { if (running) firePulse(); });
   const num = (id, key, f = parseFloat) => $(id).addEventListener('input', () => { P[key] = f($(id).value); });
   num('mode', 'mode', (v) => parseInt(v)); num('sens', 'sens'); num('sep', 'sep'); num('speed', 'speed'); num('thr', 'thr'); num('pdur', 'pdur'); num('decay', 'decay');
