@@ -97,6 +97,8 @@
     const fg = $('#filmGrid'), sg = $('#shortGrid'); fg.innerHTML = sg.innerHTML = '';
     films.forEach((it, i) => fg.appendChild(card(it, films, i, true)));
     shorts.forEach((it, i) => sg.appendChild(card(it, shorts, i, true)));
+    $('#shortHead').hidden = sg.hidden = !shorts.length;
+    $('#filmHead').hidden = !shorts.length;
   }
   function drawChoices() {
     const pick = (arr, n) => arr.slice(0, n);
