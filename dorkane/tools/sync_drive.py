@@ -25,6 +25,7 @@ def listing(fid):
 
 VIDEO_EXT = re.compile(r'\.(mov|mp4|m4v|webm|avi|mkv)$', re.I)
 def order_key(name):
+    name = re.sub(r'^(עותק של )+', '', name).strip()
     m = re.match(r'^\s*(\d+)[\s_-]+', name)
     return (int(m.group(1)) if m else 10**6, name.lower())
 FILM_FIX = {'heavy matirials': 'Heavy materials', 'בעולם אחר- in another world': 'בעולם אחר – In another world',
