@@ -25,10 +25,18 @@ def listing(fid):
 
 VIDEO_EXT = re.compile(r'\.(mov|mp4|m4v|webm|avi|mkv)$', re.I)
 def order_key(name):
-    m = re.match(r'^\s*(\d+)[\s._-]+', name)
+    m = re.match(r'^\s*(\d+)[\s_-]+', name)
     return (int(m.group(1)) if m else 10**6, name.lower())
+FILM_FIX = {'heavy matirials': 'Heavy materials', 'בעולם אחר- in another world': 'בעולם אחר – In another world',
+            'i dreamt i was a butterfly': 'I dreamt I was a butterfly', 'working late waking early': 'Working late, waking early',
+            'kanaan': 'Kanaan', 'faith': 'Faith'}
 def title(name):
-    return clean(re.sub(r'^\s*\d+[\s._-]+', '', name))
+    n = re.sub(r'^(עותק של )+', '', name).strip()
+    n = re.sub(r'^\s*\d+[\s_-]+(?=\D)', '', n)
+    n = re.sub(r'\.(mp4|mov|m4v|webm|avi|mkv)\b', ' ', n, flags=re.I)
+    n = re.sub(r'\b(dor kane|movie|final)\b|\b\d\d\.\d\d\s*$', ' ', n, flags=re.I)
+    n = re.sub(r'\s+', ' ', n).strip()
+    return FILM_FIX.get(n.lower()) or clean(n)
 def files(fid):
     return sorted([(n, i) for k, i, n in listing(fid) if k == 'file' and VIDEO_EXT.search(n)], key=lambda x: order_key(x[0]))
 def folders(fid):
@@ -46,7 +54,10 @@ for name, fid in folders(root):
                 reel = {'t': 'TouchDesigner reel', 'id': i}
             else:
                 td.append({'t': title(fname), 'id': i, 'tag': 'td', 'sel': False})
-        for sub, sid in folders(fid):
+        subs = folders(fid)
+        if not any(has(sub, 'נבחר', 'select', 'best') for sub, _ in subs):
+            for x in td: x['sel'] = True   # no "נבחרות" folder: files directly in the folder are the selected ones
+        for sub, sid in subs:
             sel = has(sub, 'נבחר', 'select', 'best')
             tag = 'sound' if has(sub, 'סאונד', 'sound', 'music') else 'abstract' if has(sub, 'אבסטרקט', 'abstract') else 'td'
             for fname, i in files(sid):
