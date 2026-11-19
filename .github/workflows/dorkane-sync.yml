@@ -7,9 +7,15 @@ on:
     paths: ['dorkane/drive-folder.txt', 'dorkane/tools/**', '.github/workflows/dorkane-sync.yml']
 permissions:
   contents: write
+concurrency:
+  group: dorkane-sync
+  cancel-in-progress: false
 jobs:
   sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 340
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
       - name: Rebuild data.js from Drive
@@ -18,10 +24,17 @@ jobs:
           ROOT=$(cat ../drive-folder.txt | tr -d '[:space:]')
           if [ -z "$ROOT" ]; then echo "No Drive folder set yet"; exit 0; fi
           python3 sync_drive.py "$ROOT"
+      - name: Convert new videos for direct playback
+        working-directory: dorkane/tools
+        run: |
+          sudo apt-get -qq update && sudo apt-get -qq install -y ffmpeg >/dev/null
+          pip install -q gdown
+          python3 media.py
       - name: Publish if anything changed
         run: |
           if git diff --quiet; then echo "No changes"; exit 0; fi
           git config user.name "dorkane-sync"
           git config user.email "actions@users.noreply.github.com"
           git commit -am "dorkane: update works from Google Drive"
+          git pull --rebase -X theirs || true
           git push

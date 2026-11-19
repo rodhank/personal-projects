@@ -3,6 +3,7 @@
   const S = window.SITE;
   const $ = (s) => document.querySelector(s);
   const thumb = (id, w) => 'https://drive.google.com/thumbnail?id=' + id + '&sz=w' + (w || 640);
+  const MEDIA = 'https://github.com/rodhank/personal-projects/releases/download/dorkane-media/';
   const LOCAL = { showcase: { t: 'שואוקייס — דור קנה', src: 'media/showcase.mp4' } };
 
   // ---------------- player (Google Drive preview for works, local file for the showcase)
@@ -19,17 +20,22 @@
     $('#playerTitle').textContent = it.t;
     const f = $('#frame');
     f.innerHTML = '';
-    if (it.src) {
-      const v = document.createElement('video');
-      v.src = it.src; v.controls = true; v.autoplay = true; v.playsInline = true;
-      f.appendChild(v);
-    } else {
+    const drive = () => {
+      f.innerHTML = '';
       const fr = document.createElement('iframe');
       fr.src = 'https://drive.google.com/file/d/' + it.id + '/preview';
       fr.allow = 'autoplay; fullscreen'; fr.allowFullscreen = true;
       f.appendChild(fr);
-    }
-    $('#playerHelp').hidden = !!it.src;
+      $('#playerHelp').hidden = false;
+    };
+    const direct = it.src || (it.m && MEDIA + it.id + '.mp4');
+    $('#playerHelp').hidden = true;
+    if (direct) {
+      const v = document.createElement('video');
+      v.src = direct; v.controls = true; v.autoplay = true; v.playsInline = true;
+      if (!it.src) v.onerror = drive;   // direct copy missing: fall back to the Drive player
+      f.appendChild(v);
+    } else drive();
     if (!it.src) $('#driveLink').href = 'https://drive.google.com/file/d/' + it.id + '/view';
     $('#prevBtn').style.visibility = $('#nextBtn').style.visibility = list.length > 1 ? 'visible' : 'hidden';
   }
