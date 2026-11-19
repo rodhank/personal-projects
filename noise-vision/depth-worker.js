@@ -34,7 +34,18 @@ async function load(prefer){
   throw err || new Error('no backend');
 }
 
-self.onmessage = async ({ data }) => {
+// one inference at a time (WebGPU sessions cannot run concurrently); a newer frame replaces a waiting one
+let running = false, queued = null;
+self.onmessage = ({ data }) => {
+  if (data.type === 'infer'){ queued = data; if (!running) pump(); return; }
+  handle(data);
+};
+async function pump(){
+  running = true;
+  while (queued){ const d = queued; queued = null; await handle(d); }
+  running = false;
+}
+async function handle(data){
   try {
     if (data.type === 'load'){
       await load(data.prefer);
@@ -54,4 +65,4 @@ self.onmessage = async ({ data }) => {
   } catch (e){
     self.postMessage({ type: 'error', id: data.id, phase: data.type, message: String(e && e.message || e) });
   }
-};
+}
